@@ -1,0 +1,41 @@
+Package: localXCR
+Version: 0.0.1
+Title: Shiny GUI to annotate Fragalysis/XChem Experiments.
+Description: A Shiny Wrapper and GUI for common software packages. This should be a much longer description and I will make it longer eventually. Seriously this needs to be this long??
+Authors@R: c(person(c("Tyler", "James"), "Gorrie-Stone", role = c("cre", "aut"),
+                    email = "tgorrie-stone@diamond.ac.uk"))
+Depends: 
+	R6,
+	utils,
+	shiny, 
+	shinydashboard,
+	nglShiny,
+	shinyjqui,
+	shinyWidgets,
+	DT
+Imports:
+	shinyFiles,
+	caTools
+Suggests: 
+    testthat (>= 3.0.0),
+    knitr
+Collate: 
+	classes.R
+	functions.R
+	control_panel_modal.R
+	flex_ui.R
+	fragview_ui.R
+	launch_pad_ui.R
+	review_ui.R
+	summary_ui.R
+	ui.R
+	server.R
+	app.R
+VignetteBuilder: knitr
+License: GPL-3
+URL: https://github.com/tjgorrie/localXCR
+BugReports: https://github.com/tjgorrie/localXCR/issues
+LazyData: yes
+Encoding: UTF-8
+RoxygenNote: 7.1.1
+Config/testthat/edition: 3
