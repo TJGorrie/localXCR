@@ -157,13 +157,18 @@ server <- function(input, output, session){
                 infoBox('Annotated', n_annotated(), icon = icon('thumbs-up', lib = 'glyphicon'), color = 'red')
             })
         }
+        f1 <- remapFragviewData(session_data = session_data)
+        output$fragviewtable <- updateMainTable(x=f1, pl=100, format=FALSE)
     })
 
     #r1 <- reactive({
     #    cbind('Ligand' = session_data$data$get_ligands, session_data$data$get_reviews)
     #})
     r1 <- remapData(session_data = session_data)
-    output$reviewtable <- updateMainTable(r1=r1)
+    f1 <- remapFragviewData(session_data = session_data)
+
+    output$reviewtable <- updateMainTable(x=r1)
+    output$fragviewtable <- updateMainTable(x=f1, pl=100, format=FALSE)
 
     atomstoquery <- reactiveValues()
     atomstoquery$data <- data.frame(name=character(),
@@ -265,7 +270,6 @@ server <- function(input, output, session){
 
     observeEvent(input$views, {
         selected_ligand <- isolate(session_data$selected)
-        print(input$views)
         if(is.null(input$views)) updateRadioButtons(session, 'views', selected = 'aligned')
         session$sendCustomMessage(type = 'setup', message = list())
         #updateParam(session=session,'mousePreset', as.character(input$mousePreset))
@@ -339,6 +343,8 @@ server <- function(input, output, session){
         )
     })
     session_data$ngl_not_opened <- TRUE
+
+    session_data$render_fragview <- TRUE
     observeEvent(input$tab, ignoreNULL = TRUE, {
         if(input$tab == 'review' & session_data$ngl_not_opened){
             session_data$ngl_not_opened <- FALSE
@@ -348,6 +354,15 @@ server <- function(input, output, session){
                     title = 'As part of setup please confirm NGL Viewer Controls'
                 )
             )
+        }
+        if(input$tab == 'fragview'){
+            updateActionButton(session, 'updateTable')
+            ligands <- isolate(session_data$data$get_ligands)
+            apo_files <- isolate(session_data$data$get_apo_files)
+            mol_files <- isolate(session_data$data$get_mol_files)
+            updateSelectInput(session, 'goto', choices = ligands)
+            tryAddPDB <- try(uploadApoPDB(filepath=apo_files[1], repr='cartoon'), silent=T)
+            molout <- try(sapply(mol_files, uploadUnfocussedMol), silent=T)
         }
     })
 
@@ -401,8 +416,82 @@ server <- function(input, output, session){
                 saveReview(x = fData, z = atomstoquery$data, ligand = isolate(session_data$selected))
                 resetForm(session = session, session_data = session_data)
                 r1 <- remapData(session_data = session_data)
-                output$reviewtable <- updateMainTable(r1=r1)
+                output$reviewtable <- updateMainTable(x=r1)
             }
         }
     })
+
+    observeEvent(input$updateTable, ignoreNULL=FALSE, {
+        f1 <- remapFragviewData(session_data = session_data)
+        output$fragviewtable <- updateMainTable(x=f1, pl=100, format=FALSE)
+        apo_files <- isolate(session_data$data$get_apo_files)
+        mol_files <- isolate(session_data$data$get_mol_files)
+        try(uploadApoPDB(session=session, filepath=apo_files[1], repr='cartoon'), silent=F)
+        try(sapply(mol_files, uploadUnfocussedMol, session=session), silent=F)
+    })
+
+    observeEvent(input$write_fv, {
+        ligand <- session_data$data$ligands[[input$goto]]
+        newmeta <- c('',ligand$name, ligand$crystal, ligand$smiles_string, input$new_smiles, 
+        input$alternate_name, input$site_name, input$pdb_entry)
+        newmeta[is.na(newmeta)] <- ''
+        ligand$metadata <- newmeta
+        output$metastatus <- renderText({'STATUS: Written!'})
+        if(!input$desync){
+            f1 <- remapFragviewData(session_data = session_data)
+            output$fragviewtable <- updateMainTable(x=f1, pl=100, format=FALSE)
+        }
+    })
+
+
+    observeEvent(input$gonext, {
+        ligands <- isolate(session_data$data$get_ligands)
+        apo_files <- isolate(session_data$data$get_apo_files)
+        mol_files <- isolate(session_data$data$get_mol_files)
+        nmol <- length(mol_files)
+        id <- which(ligands == input$goto)
+        next_id <- id + 1
+        if(next_id > nmol) next_id <- 1 # Overflow back to start of list
+        # Cycle along to next ligand in molfil
+        updateSelectInput(session, 'goto', selected = ligands[next_id], choices=ligands)
+    })
+
+    observeEvent(input$goback, {
+        ligands <- isolate(session_data$data$get_ligands)
+        apo_files <- isolate(session_data$data$get_apo_files)
+        mol_files <- isolate(session_data$data$get_mol_files)
+        nmol <- length(mol_files)
+        id <- which(ligands == input$goto)
+        next_id <- id - 1
+        if(next_id < nmol) next_id <- 1 # Overflow back to start of list
+        # Cycle along to next ligand in molfil
+        updateSelectInput(session, 'goto', selected = ligands[next_id], choices=ligands)
+    })
+
+    observeEvent(input$goto, {
+        output$metastatus <- renderText({'STATUS: Pending...'})
+        ligand <- session_data$data$ligands[[input$goto]]
+        mol_file <- ligand$mol_file
+        smiles <- ligand$get_smiles
+        choices <- unique(c('', as.character(remapFragviewData(session_data = session_data)()[, 6])))
+        meta <- as.character(ligand$metadata)
+        meta[is.na(meta)] <- ''
+        # Fill Form as seen
+        updateTextInput(session, 'crysname', value = input$goto)
+        updateTextInput(session, 'smiles', value = meta[4])
+        updateTextInput(session, 'new_smiles', value = meta[5])
+        updateTextInput(session, 'alternate_name', value = meta[6])
+        updateSelectizeInput(session, 'site_name', selected = meta[7], choices=choices)
+        updateTextInput(session, 'pdb_entry', value = meta[8])
+        # Go to specific ligand do not edit go next loop
+        gogogo <- try(uploadMF2(session=session, filepath=mol_file), silent=F)
+    })
+
+        # On Table Rowclick # Potentially slow? Unneeded? # Go back to
+    observeEvent(input$fragviewtable_rows_selected, {
+        ligands <- isolate(session_data$data$get_ligands)
+        choice = isolate(rownames(f1())[input$fragviewtable_rows_selected])
+        updateSelectizeInput(session, 'goto', selected = choice, choices=ligands)
+    })
+
 }

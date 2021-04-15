@@ -157,12 +157,12 @@ Experiment <- R6::R6Class(
             colnames(res) <- c('decision_str', 'reason', 'comments', 'bad_ids', 'bad_comments')
             return(res)
         }, # Return a Table?
-        get_metadata    = function(value) t(getLigandProp(value = value, ligands = self$ligands, what = 'metadata')) # This returns a table
+        get_metadata    = function(value) data.frame(apply(t(getLigandProp(value = value, ligands = self$ligands, what = 'metadata')),2,unlist), stringsAsFactors = FALSE) # This returns a table
     )
 )
 
 createExperiment <- function(folder_path) Experiment$new(folder_path)
 
 n_ligs <- function(exp) return(length(exp$get_ligands))
-n_anno <- function(exp) return(sum(!is.na(unlist(exp$get_metadata[ ,'V7']))))
+n_anno <- function(exp) return(sum(!is.na(exp$get_metadata[ ,6])))
 n_revi <- function(exp) return(sum(!exp$get_reviews[ ,'decision_str'] == ''))

@@ -27,25 +27,39 @@ rsplit <- function(string, split_by, n=1){
     return(result)
 }
 
-updateMainTable <- function(r1, pl=25){
-    DT::renderDataTable({
-        DT::datatable(
-            r1(),
-            selection = 'single',
-            options = list(
-                pageLength = pl,
-                columnDefs = list(list(width='100px', targets=c(4)))
-            ), rownames= FALSE
-        ) %>% DT::formatStyle(
-            'decision_str',
-            target = 'row',
-            backgroundColor = DT::styleEqual(
-                c('Release', 'More Refinement', 'More Experiments', 'Reject'),
-                c('#648FFF', '#FFB000',         '#FE6100',          '#DC267F')
-            )
-        ) %>% DT::formatStyle(columns = 1:ncol(r1()),"white-space"="nowrap")
-    })
+updateMainTable <- function(x, pl=25, format=TRUE){
+    if(format){
+        DT::renderDataTable({
+            DT::datatable(
+                x(),
+                selection = 'single',
+                options = list(
+                    pageLength = pl,
+                    columnDefs = list(list(width='100px', targets=c(4)))
+                ), rownames= FALSE
+            ) %>% DT::formatStyle(
+                'decision_str',
+                target = 'row',
+                backgroundColor = DT::styleEqual(
+                    c('Release', 'More Refinement', 'More Experiments', 'Reject'),
+                    c('#648FFF', '#FFB000',         '#FE6100',          '#DC267F')
+                )
+            ) %>% DT::formatStyle(columns = 1:ncol(x()),"white-space"="nowrap")
+        })
+    } else {
+        DT::renderDataTable({
+            DT::datatable(
+                x(),
+                selection = 'single',
+                options = list(
+                    pageLength = pl
+                ), rownames= FALSE
+            ) %>% DT::formatStyle(columns = 1:ncol(x()),"white-space"="nowrap")
+        })
+    }
 }
+
+
 
 
 removeSpaces <- function(x) return(gsub(' ', '\\ ', x, fixed=T))
@@ -88,7 +102,6 @@ updateParam <- function(session, which, what){
 removeNamedComponent <- function(session, objectname) session$sendCustomMessage(type='removeNamedComponent', list(objectname))
 
 uploadPDB <- function(session, filepath, input){
-    print(filepath)
     syscall <- sprintf('cat %s', filepath)
     pdbstrings <- system(syscall, intern = TRUE)
     choice <- paste0(pdbstrings, collapse = '\n')
@@ -130,6 +143,16 @@ uploadMolAndFocus <- function(session, filepath, ext){
     )
 }
 
+uploadMF2 <- function(session, filepath){
+        syscall <- sprintf('cat %s', filepath)
+        pdbstrings <- system(syscall, intern = TRUE)
+        choice <- paste0(pdbstrings, collapse = '\n')
+        session$sendCustomMessage(
+            type = 'fv_addMolandfocus',
+            list(choice)
+        )
+    }
+
 uploadUnfocussedMol <- function(session, filepath){
     filepath <- removeSpaces(filepath)
     syscall <- sprintf('cat %s', filepath)
@@ -142,8 +165,6 @@ uploadUnfocussedMol <- function(session, filepath){
 }
 
 uploadVolumeDensity <- function(session, filepath, color, negateiso = FALSE, boxsize, isolevel, visable, windowname){
-    #filepath <- removeSpaces(filepath)
-    print(filepath)
     volume_bin <- readBin(filepath, what='raw', file.info(filepath)$size)
     volume_b64 <- caTools::base64encode(volume_bin, size=NA, endian=.Platform$endian)
     session$sendCustomMessage(
@@ -175,15 +196,17 @@ updateVisability <- function(session, name, bool){
 updateDensityISO <- function(session, name, isolevel) session$sendCustomMessage('updateVolumeDensityISO', list(name, isolevel))
 updateDensityBoxSize <- function(session, name, boxsize) session$sendCustomMessage('updateVolumeDensityBoxSize', list(name, boxsize))
 
-restartSessionKeepOptions <- function(inputData){
-    dbdat <- getReviewData(db=db, host_db=host_db, db_port=db_port, db_user=db_user, db_password=db_password)
-    inputData <- reactive({dbdat})
-    return(inputData)
-}
-
 remapData <- function(session_data){
     reactive({
         cbind('Ligand' = session_data$data$get_ligands, session_data$data$get_reviews)
+    })
+}
+
+remapFragviewData <- function(session_data){
+    reactive({
+        dat <- session_data$data$get_metadata[,-1]
+        rownames(dat) <- dat[,1]
+        return(dat)
     })
 }
 
@@ -215,4 +238,14 @@ saveReview <- function(x,z, ligand){
         }
         cat(paste(lines, collapse='\n'), file=ligand$mol_file)
     }
+}
+
+uploadMolAndFocus2 <- function(filepath){
+    syscall <- sprintf('cat %s', filepath)
+    pdbstrings <- system(syscall, intern = TRUE)
+    choice <- paste0(pdbstrings, collapse = '\n')
+    session$sendCustomMessage(
+        type = 'fv_addMolandfocus',
+        list(choice)
+    )
 }
