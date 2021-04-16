@@ -1,3 +1,10 @@
+#' Generate Review UI components
+#' 
+#' @param session_data Some reactive values
+#' 
+#' @return Corresponding UI elements for Review
+#' @import shiny nglShiny DT shinydashboard
+#' @importFrom shinyWidgets chooseSliderSkin
 review_ui <- function(session_data){
     components <- fluidPage(fluidRow(
         nglShiny::nglShinyOutput('nglShiny', height = '500px'),
@@ -10,7 +17,7 @@ review_ui <- function(session_data){
                         "Center on Ligand"
                     ),
                     fluidRow(
-                        chooseSliderSkin(
+                        shinyWidgets::chooseSliderSkin(
                             "Flat", 
                             color = '#112446'
                         ),
@@ -106,59 +113,11 @@ review_ui <- function(session_data){
                         )
                     )
                 ),
-                #tabPanel(
-                #    title = 'Ligand Information',
-                #    div(
-                #        style='overflow-y:scroll;height:600px;',
-                #        fluidRow(
-                #            column(
-                #                8,
-                #                column(
-                #                    imageOutput('ligimage')
-                #                    6, 
-                #                ),
-                #                column(
-                #                    6,
-                #                    imageOutput('spiderPlot')
-                #                )
-                #            ),
-                #            column(
-                #                4,
-                #                div(
-                #                    style = "margin-top:-1em", 
-                #                        'renderMisc', 
-                #                    checkboxInput(
-                #                        'Render Image/Spider Plot', 
-                #                        value = TRUE, 
-                #                        width = NULL
-                #                    )
-                #                ),
-                #                div(
-                #                    style = "margin-top:-1em", 
-                #                    selectInput(
-                #                        'emap', 
-                #                        'Select Eventmap', 
-                #                        choices = '', 
-                #                        multiple = FALSE
-                #                    )
-                #                ),
-                #            )
-                #        ),
-                #        column(
-                #            12,
-                #            div(
-                #                style = "margin-top:-15em",
-                #                    fluidRow(
-                #                        uiOutput('plotElement')
-                #                    )
-                #            )
-                #        )
-                #    ),
-                #),
                 tabPanel(
                     title = 'Atom Selection (Alt + Left Click)',
                     textOutput('as_message'),
-                    actionButton('as_clear', label = 'Clear all selected atoms'),
+                    actionButton('as_clear', 
+                        label = 'Clear all selected atoms'),
                     DT::dataTableOutput('atoms')
                 )
             ), options = list(delay = '1000')
@@ -171,59 +130,7 @@ review_ui <- function(session_data){
                         style = 'overflow-y:scroll;height:600px;',
                         DT::DTOutput('reviewtable') # Great Name!
                     )
-                )#,
-                #tabPanel(
-                #    title = 'Review Plots (Click points to load ligand)',
-                #        fluidRow(
-                #            column(
-                #                4,
-                #                selectInput(
-                #                    'fpex', 
-                #                    'x', 
-                #                    selected = 'res', 
-                #                    choices = c(
-                #                       'res', 
-                #                       'r_free', 
-                #                       'rcryst', 
-                #                       'ramachandran_outliers', 
-                #                       'rmsd_angles', 
-                #                       'rmsd_bonds'
-                #                    )
-                #                )
-                #            ),
-                #            column(
-                #                4,
-                #                selectInput(
-                #                    'fpey', 
-                #                    'y', 
-                #                    selected = 'r_free', 
-                #                    choices = c(
-                #                        'res', 
-                #                        'r_free', 
-                #                        'rcryst', 
-                #                        'ramachandran_outliers', 
-                #                        'rmsd_angles', 
-                #                        'rmsd_bonds'
-                #                    )
-                #                )
-                #            ),
-                #            column(
-                #                4,
-                #                selectInput(
-                #                    'fpe_target', 
-                #                    'target', 
-                #                    selected = '', 
-                #                    choices = c(
-                #                        'A', 
-                #                        'B', 
-                #                        'C'
-                #                    )
-                #                )
-                #            )
-                #        ),
-                #        verbatimTextOutput("info"),
-                #        uiOutput('flexPlotElement')
-                #)
+                )
             ), options = list(delay = '1000')
         )
     ))

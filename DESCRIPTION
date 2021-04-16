@@ -1,19 +1,19 @@
 Package: localXCR
 Version: 0.0.1
-Title: Shiny GUI to annotate Fragalysis/XChem Experiments.
+Title: Shiny GUI to annotate Fragalysis/XChem Experiments
 Description: A Shiny Wrapper and GUI for common software packages. This should be a much longer description and I will make it longer eventually. Seriously this needs to be this long??
 Authors@R: c(person(c("Tyler", "James"), "Gorrie-Stone", role = c("cre", "aut"),
                     email = "tgorrie-stone@diamond.ac.uk"))
 Depends: 
+	utils
+Imports:
 	R6,
-	utils,
 	shiny, 
 	shinydashboard,
 	nglShiny,
 	shinyjqui,
 	shinyWidgets,
-	DT
-Imports:
+	DT,
 	shinyFiles,
 	caTools
 Suggests: 

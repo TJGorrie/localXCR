@@ -1,3 +1,11 @@
+#' XCR Server
+#' 
+#' @param input nothing really
+#' @param output nothing really
+#' @param session nothing really
+#' 
+#' @return it's the thing that makes this go
+#' @import shiny
 server <- function(input, output, session){
     # Cheeky Defaults that I need to encapsulate...
     possDec <- c("", "Release", "More Refinement", "More Experiments", "Reject")
@@ -161,9 +169,6 @@ server <- function(input, output, session){
         output$fragviewtable <- updateMainTable(x=f1, pl=100, format=FALSE)
     })
 
-    #r1 <- reactive({
-    #    cbind('Ligand' = session_data$data$get_ligands, session_data$data$get_reviews)
-    #})
     r1 <- remapData(session_data = session_data)
     f1 <- remapFragviewData(session_data = session_data)
 
@@ -272,10 +277,10 @@ server <- function(input, output, session){
         selected_ligand <- isolate(session_data$selected)
         if(is.null(input$views)) updateRadioButtons(session, 'views', selected = 'aligned')
         session$sendCustomMessage(type = 'setup', message = list())
-        #updateParam(session=session,'mousePreset', as.character(input$mousePreset))
-        #updateParam(session=session,'clipDist', as.character(input$clipDist))
+        updateParam(session=session,'mousePreset', as.character(input$mousePreset))
+        updateParam(session=session,'clipDist', as.character(input$clipDist))
         updateSelectInput(session, 'emap', choices = c('NotAMap.ccp4'), selected = c('NotAMap.ccp4'))
-        #updateSelectInput(session, 'asuSwitch', selected='AU', choices=c('AU', 'UNITCELL', 'SUPERCELL'))
+        updateSelectInput(session, 'asuSwitch', selected='AU', choices=c('AU', 'UNITCELL', 'SUPERCELL'))
         
         possible <- try(selected_ligand$apo_pdb_file, silent = TRUE)
         if(!inherits(possible, 'try-error')){

@@ -1,3 +1,7 @@
+#' UI generator
+#' 
+#' @return UI components!
+#' @import shinydashboard shiny
 ui <- function(){
     header <- dashboardHeader(
         title = 'local XChemReview',
@@ -44,7 +48,6 @@ ui <- function(){
                 icon = icon('th')
             ),
             hr(),
-            # Flexible Sidebar options depending on which menuitem is selected.
             uiOutput('flex')
         )
     )

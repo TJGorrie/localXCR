@@ -1,7 +1,7 @@
 #' Launch local XCR instance
 #'
 #' @param host The IP address. default is '0.0.0.0'
-#' @param port The port to
+#' @param port The port to host app from
 #' @param launch.browser Logical, indicate whether or not the default browser
 #'  should open
 #' @import shiny
