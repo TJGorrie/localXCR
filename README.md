@@ -14,6 +14,9 @@ devtools::install_github('tjgorrie/nglShiny')
 devtools::install_github('tjgorrie/localXCR')
 ```
 
+If you are on windows you may need to install `RTools`, you can follow the steps here at:
+cran.r-project.org/bin/windows/Rtools/
+
 ## Usage
 
 Once localXCR is installed you can run the program by running the following in the R terminal
