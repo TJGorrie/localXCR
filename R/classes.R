@@ -131,6 +131,10 @@ Ligand <- R6::R6Class(
                 cat(paste(value, collapse='\t'), file = self$review_file)
             }
         },
+        #' @field status What is the review status
+        status = function(value){
+            if(missing(value)) self$review[1]
+        },
         #' @field crys_pdb_file file path where crystallographic pdb should exist
         crys_pdb_file = function(value){
             if(missing(value)){
@@ -300,6 +304,14 @@ Experiment <- R6::R6Class(
                 ),
                 stringsAsFactors = FALSE
             )
+        },
+        #' @field get_status Get the review status of ligands
+        get_status = function(value) {
+            getLigandProp(
+                value = value, 
+                ligands = self$ligands, 
+                what = 'status'
+            )
         }
     )
 )
@@ -341,7 +353,7 @@ n_ligs <- function(exp) return(length(exp$get_ligands))
 #' e <- createExperiment(folder_path = './')
 #' n_anno(e)
 #' }
-n_anno <- function(exp) return(sum(!is.na(exp$get_metadata[ ,6])))
+n_anno <- function(exp) return(sum(!is.na(exp$get_metadata[ ,7])))
 
 #' Number of ligands reviewed
 #' 

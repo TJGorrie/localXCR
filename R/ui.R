@@ -60,7 +60,7 @@ ui <- function(){
             ),
             tabItem(
                 tabName = 'help',
-                h2('Help documentation Goes Here')
+                includeMarkdown(system.file('extdata', 'help_pages.md', package = 'localXCR'))
             ),
             tabItem(
                 tabName = 'summary',

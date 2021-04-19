@@ -498,3 +498,73 @@ uploadMolAndFocus2 <- function(session, filepath){
         list(choice)
     )
 }
+
+#' Create the folder one would need to upload to fragalysis
+#' 
+#' @param data an experiment object
+#' @param copymaps bool, if you want to copy the maps
+#' 
+#' @return Creates some folders on the file system and return the filepath of the zipped file!
+createFragUploadFolder <- function(data, copymaps=FALSE){
+    progress <- shiny::Progress$new()
+    on.exit(progress$close())
+    progress$set(message = "Creating Folder", value = 0)
+
+    meta <- data$get_metadata
+    colnames(meta) <- c('','crystal_name', 'RealCrystalName', 'smiles', 'new_smiles', 'alternate_name', 'site_name', 'pdb_entry')
+
+    prot = data$target
+    protsuffix <- paste(prot, format(Sys.time(), "%Y%m%d_%H%M"), sep='_')
+
+    base_root <- data$filepath
+    rootf <- file.path(dirname(base_root), protsuffix)
+    basef <- file.path(rootf, prot)
+    align_dir <- file.path(basef, 'aligned')
+    crys_dir <- file.path(basef, 'crystallographic')
+
+    system2('mkdir', rootf)
+    system2('mkdir', basef)
+    system2('mkdir', align_dir)
+    system2('mkdir', crys_dir)
+
+
+    # Filter out IGNORES and non Releases?
+    keep_one <- !meta$site_name == 'IGNORE'
+    keep_two <- data$get_status == 'Release'
+    meta <- meta[keep_one & keep_two, ]
+    # aligned data copy
+    progress$set(message = "Copying aligned Files", value = 0)
+    increment = (1/nrow(meta))/1.1
+    for(frag in meta$crystal_name){
+        # For each ligand object...
+        obj <- data$ligands[[frag]]
+        progress$inc(increment, detail=frag)
+        cf <- obj$aligned_loc
+        nf <- paste(align_dir, frag, sep='/')
+        files <- list.files(cf)
+        if(!copymaps) files <- files[!grepl("(.map$|.ccp4$)", files)]
+        system(sprintf('mkdir %s', nf))
+        file.copy(file.path(cf,files), file.path(nf, files))
+
+        # Then do the crystallographic?
+        cf <- obj$crys_loc
+        nf <- crys_dir
+        files <- list.files(cf, pattern = rsplit(frag, '_', 1)[1])
+        if(!copymaps) files <- files[!grepl("(.map$|.ccp4$)", files)]
+        file.copy(file.path(cf,files), file.path(nf, files))
+    }
+
+    write.csv(meta, sprintf("%s/metadata.csv", basef), quote = FALSE)
+    write.csv(meta, sprintf("%s/metadata.csv", align_dir), quote = FALSE)
+
+    progress$set(message = "Zipping File!", value = .9)
+
+    # Zip File
+    zipf <- sprintf('%s.zip', prot)
+    zipcommand <- sprintf("(cd %s && zip -r %s .)", rootf, prot)
+    system(zipcommand)
+
+    full_path_zipf <- sprintf('%s/%s', rootf, zipf)
+
+    return(full_path_zipf)
+}

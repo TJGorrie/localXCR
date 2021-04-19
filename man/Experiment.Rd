@@ -47,6 +47,8 @@ e <- Experiment$new(folder_path = './')
 \item{\code{get_reviews}}{Table of Reviews}
 
 \item{\code{get_metadata}}{Table of meta data}
+
+\item{\code{get_status}}{Get the review status of ligands}
 }
 \if{html}{\out{</div>}}
 }

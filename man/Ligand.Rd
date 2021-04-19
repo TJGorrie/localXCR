@@ -56,6 +56,8 @@ l <- Ligand$new(name = 'Prot-x1234', base = './')
 
 \item{\code{review}}{Contents of the review file}
 
+\item{\code{status}}{What is the review status}
+
 \item{\code{crys_pdb_file}}{file path where crystallographic pdb should exist}
 
 \item{\code{crys_event_maps}}{file path where crystallographic event exist}

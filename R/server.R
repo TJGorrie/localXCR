@@ -5,7 +5,7 @@
 #' @param session nothing really
 #' 
 #' @return it's the thing that makes this go
-#' @import shiny
+#' @import shiny nglShiny
 server <- function(input, output, session){
     # Cheeky Defaults that I need to encapsulate...
     possDec <- c("", "Release", "More Refinement", "More Experiments", "Reject")
@@ -81,11 +81,11 @@ server <- function(input, output, session){
     output$flex <- renderUI({flex_ui(which = input$tab, session_data=session_data)})
     
     # NGL STAGE
-    output$nglShiny <- renderNglShiny(
-        nglShiny(name = 'nglShiny', list(), width = NULL, height = NULL)
+    output$nglShiny <- nglShiny::renderNglShiny(
+        nglShiny::nglShiny(name = 'nglShiny', list(), width = NULL, height = NULL)
     )
-    output$FragViewnglShiny <- renderNglShiny(
-        nglShiny(name = 'nglShiny', list(), width=NULL, height=100)
+    output$FragViewnglShiny <- nglShiny::renderNglShiny(
+        nglShiny::nglShiny(name = 'nglShiny', list(), width=NULL, height=100)
     )
 
     # Map Listeners
@@ -499,4 +499,19 @@ server <- function(input, output, session){
         updateSelectizeInput(session, 'goto', selected = choice, choices=ligands)
     })
 
+    observeEvent(input$lp_launcher, {
+        session_data$fullpath_frag <- createFragUploadFolder(
+            data = session_data$data,
+            copymaps = input$copymaps
+        )
+    })
+
+    output$lp_download <- downloadHandler(
+        filename = function(){
+            return(basename(session_data$fullpath_frag))
+        },
+        content = function(file) {
+            file.copy(session_data$fullpath_frag, file)
+        }
+    )
 }

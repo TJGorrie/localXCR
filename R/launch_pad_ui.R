@@ -4,12 +4,7 @@
 #' @import shiny
 launch_pad_ui <- function(){
     components <- fluidPage(
-        #selectInput(
-        #    'lp_selection', 
-        #    'Select Target', 
-        #    selected = '', 
-        #    choices = c('Not yet implemented...')
-        #),
+        checkboxInput('copymaps', 'Copy Map Files', value = FALSE),
         actionButton(
             'lp_launcher', 
             "Compile Files"

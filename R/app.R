@@ -4,7 +4,7 @@
 #' @param port The port to host app from
 #' @param launch.browser Logical, indicate whether or not the default browser
 #'  should open
-#' @import shiny
+#' @importFrom shiny shinyApp runApp
 #' @return Runs the XCR shiny applet.
 #' @examples
 #' \dontrun{
@@ -12,8 +12,8 @@
 #' }
 #' @export
 launch_XCR <- function(host = '0.0.0.0', port = 8000, launch.browser=TRUE){
-    app <- shinyApp(ui = ui(), server = server)
-    runApp(
+    app <- shiny::shinyApp(ui = ui(), server = server)
+    shiny::runApp(
         app,
         host = host,
         port = as.numeric(port),
