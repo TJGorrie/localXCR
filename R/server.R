@@ -143,12 +143,12 @@ server <- function(input, output, session){
     shinyFiles::shinyDirChoose(
         input, 
         'summary_import_dir', 
-        roots = c(root = '.'),
+        roots = c(root = '/'),
         filetypes = c('', '.pdb', '.mol', '.ccp4', '.map', '.txt')
     )
 
     observeEvent(input$summary_import_dir, {
-        path <- normalise_path(x = isolate(input$summary_import_dir), root = '.')
+        path <- normalise_path(x = isolate(input$summary_import_dir), root = '/')
         output$summary_import_dir_filepath <- renderText({
             path
         })
