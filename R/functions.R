@@ -8,11 +8,12 @@
 #' 
 #' @import utils
 #' @return Character String of the normalised path
-normalise_path <- function(x, root = getwd()){
+normalise_path <- function(x, root){
     folder_path <- unlist(x)
+    print(folder_path)
     trimmed_folder_path <- head(folder_path, length(folder_path) - 1)
     collapsed_folder_path <- paste(
-        c(root, trimmed_folder_path),
+        c(root[tail(folder_path, 1)], trimmed_folder_path),
         collapse = '/'
     )
     return(collapsed_folder_path)

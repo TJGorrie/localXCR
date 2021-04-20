@@ -4,7 +4,7 @@
 \alias{normalise_path}
 \title{Normalise shinyFiles path}
 \usage{
-normalise_path(x, root = getwd())
+normalise_path(x, root)
 }
 \arguments{
 \item{x}{The shinyFiles output}
