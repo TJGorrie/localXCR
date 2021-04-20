@@ -154,7 +154,7 @@ server <- function(input, output, session){
             volumes <- sub(" *\\r$", "", volumes)
             keep <- !tolower(volumes) %in% c('caption', '')
             volumes <- volumes[keep]
-            volNames <- system(sprintf("%s logicaldisk get VolumeName"), intern = TRUE)
+            volNames <- system(sprintf("%s logicaldisk get VolumeName", wmic), intern = TRUE)
             volNames <- sub(" *\\r$", "", volNames)
             volNames <- volNames[keep]
             volNames <- paste0(volNames, ifelse(volNames == "", " "))
