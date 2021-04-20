@@ -8,7 +8,8 @@ fragview_ui <- function(){
         fluidRow(
             nglShinyOutput('FragViewnglShiny', height = '500px'),
             shinyjqui::jqui_draggable(tabBox(
-                div(style='height:600px;', DT::dataTableOutput('fragviewtable'))))
+                div(style='overflow-y:scroll', 
+                DT::dataTableOutput('fragviewtable')), width=11))
         )
     )
     return(components)
