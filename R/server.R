@@ -140,7 +140,7 @@ server <- function(input, output, session){
                 value = 3, step = 0.1)
     })
 
-    # Shiny Files cludge for windows??
+    # Shiny Files cludge for windows?? This could be improved in general I think.
     roots = c(root = '/')
     osSystem <- Sys.info()['sysname']
     windows = FALSE
@@ -154,10 +154,10 @@ server <- function(input, output, session){
             volumes <- sub(" *\\r$", "", volumes)
             keep <- !tolower(volumes) %in% c('caption', '')
             volumes <- volumes[keep]
-            volNames <- system(sprintf("%s logicaldisk get VolumeName"), intern = TRUE)
+            volNames <- system(sprintf("%s logicaldisk get VolumeName", wmic), intern = TRUE)
             volNames <- sub(" *\\r$", "", volNames)
             volNames <- volNames[keep]
-            volNames <- paste0(volNames, ifelse(volNames == "", " "))
+            volNames <- paste0(volNames, ifelse(volNames == "", "", " "))
             volNames <- sprintf("%s(%s)", volNames, volumes)
             names(volumes) <- volNames
             roots <- gsub(":$", ":/", volumes)
