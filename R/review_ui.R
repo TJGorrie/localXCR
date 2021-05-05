@@ -116,8 +116,12 @@ review_ui <- function(session_data){
                 tabPanel(
                     title = 'Atom Selection (Alt + Left Click)',
                     textOutput('as_message'),
-                    actionButton('as_clear', 
-                        label = 'Clear all selected atoms'),
+                    fluidRow(
+                        column(3, actionButton('as_clear', label = 'Clear Atoms')),
+                        column(3, checkboxInput('write_all', 'Write to All Atoms?', value=FALSE)),
+                        column(3, actionButton('write_selected', label = 'Write to selected rows')),
+                        column(3, textInput('atom_text', 'Comment', value='', placeholder='e.g. Weak Density'))
+                    ),
                     DT::dataTableOutput('atoms')
                 )
             ), options = list(delay = '1000')

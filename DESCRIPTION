@@ -1,5 +1,5 @@
 Package: localXCR
-Version: 0.99.1
+Version: 0.99.2
 Title: Shiny GUI to annotate Fragalysis/XChem Experiments
 Description: A shiny gui to view, review, annotate and repackage the output of fragalysis-api pdbs and fully prepare them for fragalysis.
 Authors@R: c(person(c("Tyler", "James"), "Gorrie-Stone", role = c("cre", "aut"),

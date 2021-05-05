@@ -206,8 +206,10 @@ server <- function(input, output, session){
                  comment=character(),
                  stringsAsFactors=FALSE)
 
-    output$atoms <- DT::renderDataTable({DT::datatable(atomstoquery$data)})
-
+    output$atoms <- DT::renderDataTable({
+        DT::datatable(atomstoquery$data, options = list(autoWidth = TRUE, columnDefs = list(list(width='50px', targets=c(1,2)))))
+        }
+    )
     observeEvent(input$clickedAtoms, {
         newdat <- isolate(atomstoquery$data)
         # Check for 'new' rows:
@@ -218,7 +220,7 @@ server <- function(input, output, session){
         tokeep <- as.character(newdat$name) %in% as.character(input$clickNames)
         newdat <- newdat[tokeep,]
         atomstoquery$data <- newdat
-        output$atoms <- DT::renderDataTable({DT::datatable(atomstoquery$data, editable = list(target = 'cell', disable = list(columns = c(1,2))))})
+        output$atoms <- DT::renderDataTable({DT::datatable(atomstoquery$data, editable = list(target = 'cell', disable = list(columns = c(1,2))), options = list(autoWidth = TRUE, columnDefs = list(list(width='50px', targets=c(1,2)))))})
     })
 
     observeEvent(input$atoms_cell_edit, {
@@ -230,8 +232,18 @@ server <- function(input, output, session){
         update <- isolate(atomstoquery$data)
         update[i, j] <- as.character(v)
         atomstoquery$data <- update
-        output$atoms <- DT::renderDataTable({DT::datatable(atomstoquery$data, editable = list(target = 'cell', disable = list(columns = c(1,2))))})
+        output$atoms <- DT::renderDataTable({DT::datatable(atomstoquery$data, editable = list(target = 'cell', disable = list(columns = c(1,2))), options = list(autoWidth = TRUE, columnDefs = list(list(width='50px', targets=c(1,2)))))})
     })
+
+    observeEvent(input$write_selected, {
+        idx <- isolate(input$atoms_rows_selected)
+        update <- isolate(atomstoquery$data)
+        if(input$write_all) idx <- 1:nrow(update)
+        update[idx, 3] <- as.character(input$atom_text)
+        atomstoquery$data <- update
+        output$atoms <- DT::renderDataTable({DT::datatable(atomstoquery$data, editable = list(target = 'cell', disable = list(columns = c(1,2))), options = list(autoWidth = TRUE, columnDefs = list(list(width='50px', targets=c(1,2)))))})
+    })
+
 
     observeEvent(input$reviewtable_rows_selected, {
         id <- input$reviewtable_rows_selected
