@@ -191,7 +191,8 @@ server <- function(input, output, session){
             })
         }
         f1 <- remapFragviewData(session_data = session_data)
-        output$fragviewtable <- updateMainTable(x=f1, pl=100, format=FALSE)
+        proxy2 %>% replaceData(f1(), rownames = FALSE, resetPaging = FALSE)
+        #output$fragviewtable <- updateMainTable(x=f1, pl=100, format=FALSE, input=input, stateref='fragviewtable_state')
     })
 
     r1 <- remapData(session_data = session_data)
@@ -199,6 +200,9 @@ server <- function(input, output, session){
 
     output$reviewtable <- updateMainTable(x=r1)
     output$fragviewtable <- updateMainTable(x=f1, pl=100, format=FALSE)
+
+    proxy1 <- dataTableProxy('reviewtable')
+    proxy2 <- dataTableProxy('fragviewtable')
 
     atomstoquery <- reactiveValues()
     atomstoquery$data <- data.frame(name=character(),
@@ -458,14 +462,16 @@ server <- function(input, output, session){
                 saveReview(x = fData, z = atomstoquery$data, ligand = isolate(session_data$selected))
                 resetForm(session = session, session_data = session_data)
                 r1 <- remapData(session_data = session_data)
-                output$reviewtable <- updateMainTable(x=r1)
+                proxy1 %>% replaceData(r1(), rownames = FALSE, resetPaging = FALSE)
+                #output$reviewtable <- updateMainTable(x=r1, input=input, stateref='reviewtable_state')
             }
         }
     })
 
     observeEvent(input$updateTable, ignoreNULL=FALSE, {
         f1 <- remapFragviewData(session_data = session_data)
-        output$fragviewtable <- updateMainTable(x=f1, pl=100, format=FALSE)
+        proxy2 %>% replaceData(f1(), rownames = FALSE, resetPaging = FALSE)
+        #output$fragviewtable <- updateMainTable(x=f1, pl=100, format=FALSE, input=input, stateref='fragviewtable_state')
         apo_files <- isolate(session_data$data$get_apo_files)
         mol_files <- isolate(session_data$data$get_mol_files)
         try(uploadApoPDB(session=session, filepath=apo_files[1], repr='cartoon'), silent=F)
@@ -481,7 +487,8 @@ server <- function(input, output, session){
         output$metastatus <- renderText({'STATUS: Written!'})
         if(!input$desync){
             f1 <- remapFragviewData(session_data = session_data)
-            output$fragviewtable <- updateMainTable(x=f1, pl=100, format=FALSE)
+            proxy2 %>% replaceData(f1(), rownames = FALSE, resetPaging = FALSE)
+            #output$fragviewtable <- updateMainTable(x=f1, pl=100, format=FALSE, input=input, stateref='fragviewtable_state')
         }
     })
 
