@@ -242,12 +242,18 @@ server <- function(input, output, session){
     observeEvent(input$write_selected, {
         idx <- isolate(input$atoms_rows_selected)
         update <- isolate(atomstoquery$data)
-        if(input$write_all) idx <- 1:nrow(update)
         update[idx, 3] <- as.character(input$atom_text)
         atomstoquery$data <- update
         output$atoms <- DT::renderDataTable({DT::datatable(atomstoquery$data, editable = list(target = 'cell', disable = list(columns = c(1,2))), options = list(autoWidth = TRUE, columnDefs = list(list(width='50px', targets=c(1,2)))))})
     })
 
+    observeEvent(input$write_all,{
+        update <- isolate(atomstoquery$data)
+        idx <- 1:nrow(update)
+        update[idx, 3] <- as.character(input$atom_text)
+        atomstoquery$data <- update
+        output$atoms <- DT::renderDataTable({DT::datatable(atomstoquery$data, editable = list(target = 'cell', disable = list(columns = c(1,2))), options = list(autoWidth = TRUE, columnDefs = list(list(width='50px', targets=c(1,2)))))})
+    })
 
     observeEvent(input$reviewtable_rows_selected, {
         id <- input$reviewtable_rows_selected
@@ -282,8 +288,8 @@ server <- function(input, output, session){
             if(!the_pdb_file == ''){
                 withProgress(message = sprintf('Loading %s Ligand', input$views), value = 0,{
                     incProgress(.2, detail = 'Uploading Crystal + Ligand')
-                    try(uploadApoPDB(session = session, filepath = the_pdb_file, repr = 'line'), silent = TRUE)
-                    try(uploadMolAndFocus(session = session, filepath = the_mol_file, ext = 'mol'), silent = TRUE)
+                    try(uploadApoPDB(session = session, filepath = the_pdb_file, repr = 'line', focus=input$autocenter), silent = TRUE)
+                    try(uploadMolAndFocus(session = session, filepath = the_mol_file, ext = 'mol', focus=input$autocenter), silent = TRUE)
                     names(the_emaps) <- basename(the_emaps)
                     session_data$current_emaps <- the_emaps
                     incProgress(.2, detail = 'Uploading Event map')
@@ -299,6 +305,14 @@ server <- function(input, output, session){
                     try(uploadVolumeDensity(session=session, filepath=the_fofc_map,
                         color = 'tomato', negateiso = TRUE, boxsize = input$boxsize, isolevel = input$isofofc, visable=input$fofcMap, windowname='fofcneg'), silent=F)
                     setProgress(1)
+                    residues <- get_residues(the_pdb_file)
+                    updateSelectInput(session, 'gotores', choices=residues)
+                    updateSelectizeInput(session, 'highlight_res', choices=residues, selected=input$highlight_res)
+                    if(!is.null(input$highlight_res)){
+                        if(!input$highlight_res == ''){
+                        pos <- paste(sapply(strsplit(input$highlight_res, '_'), '[', 2), collapse=', ')
+                        try(session$sendCustomMessage(type='highlight_residues', list(pos)))
+                    }}
                 })
             }
         } else {
@@ -306,6 +320,22 @@ server <- function(input, output, session){
             updateRadioButtons(session, 'views', selected = 'aligned')
         }
 
+    })
+
+    observeEvent(input$gotores, ignoreNULL=TRUE, {
+        if(!input$gotores == ''){
+            pos <- strsplit(input$gotores, '_')[[1]][2]
+            print(pos)
+            try(session$sendCustomMessage(type='go_to_residue', list(pos)))
+        }
+    })
+
+    observeEvent(input$highlight_res, ignoreNULL=TRUE,{
+        if(!input$highlight_res == ''){
+            pos <- paste(sapply(strsplit(input$highlight_res, '_'), '[', 2), collapse=', ')
+            print(pos)
+            try(session$sendCustomMessage(type='highlight_residues', list(pos)))
+        }
     })
 
     observeEvent(input$emap, ignoreNULL = TRUE, {
@@ -346,11 +376,12 @@ server <- function(input, output, session){
                         the_fofc_map <- ''
                     },
                     'aligned' = {
-                        # Default Behaviour do not change anything!
-                        try(uploadApoPDB(session = session, filepath = the_pdb_file, repr = 'line'), silent = TRUE)
-                        try(uploadMolAndFocus(session = session, filepath = the_mol_file, ext = 'mol'), silent = TRUE)
+                        try(uploadApoPDB(session = session, filepath = the_pdb_file, repr = 'line', focus=input$autocenter), silent = TRUE)
+                        try(uploadMolAndFocus(session = session, filepath = the_mol_file, ext = 'mol', focus=input$autocenter), silent = TRUE)
+                        session$sendCustomMessage(type = 'restore_camera_pos', message = list())
                     },
                     'crystallographic' = {
+                        session$sendCustomMessage(type = 'save_camera_pos', message = list())
                         the_pdb_file <- selected_ligand$crys_pdb_file
                         try(uploadPDB(session = session, filepath = the_pdb_file, input = input), silent=T)
                         the_2fofc_map <- selected_ligand$crys_2fofc_map
@@ -358,6 +389,11 @@ server <- function(input, output, session){
                         the_emaps <- selected_ligand$crys_event_maps
                     }
                 )
+                if(!is.null(input$highlight_res)){
+                    if(!input$highlight_res == ''){
+                    pos <- paste(sapply(strsplit(input$highlight_res, '_'), '[', 2), collapse=', ')
+                    try(session$sendCustomMessage(type='highlight_residues', list(pos)))
+                }}
                 if(length(the_emaps) > 0) {
                     names(the_emaps) <- basename(the_emaps)
                     session_data$current_emaps <- the_emaps
@@ -407,7 +443,7 @@ server <- function(input, output, session){
             apo_files <- isolate(session_data$data$get_apo_files)
             mol_files <- isolate(session_data$data$get_mol_files)
             updateSelectInput(session, 'goto', choices = ligands)
-            tryAddPDB <- try(uploadApoPDB(filepath=apo_files[1], repr='cartoon'), silent=T)
+            tryAddPDB <- try(uploadApoPDB(filepath=apo_files[1], repr='cartoon',focus=TRUE), silent=T)
             molout <- try(sapply(mol_files, uploadUnfocussedMol), silent=T)
         }
     })
@@ -426,7 +462,8 @@ server <- function(input, output, session){
     # 2) Save the coordinates of default view and call to them directly :D?
     # 3) Cry
     observeEvent(input$fitButton, {
-        try(uploadMolAndFocus(session = session, filepath = isolate(session_data$selected)$mol_file, ext = 'mol'), silent = TRUE)
+        #try(uploadMolAndFocus(session = session, filepath = isolate(session_data$selected)$mol_file, ext = 'mol', focus=TRUE), silent = TRUE)
+        try(session$sendCustomMessage(type='focus_on_mol', list()), silent=TRUE)
     })
 
     observeEvent(input$decision, {
@@ -474,7 +511,7 @@ server <- function(input, output, session){
         #output$fragviewtable <- updateMainTable(x=f1, pl=100, format=FALSE, input=input, stateref='fragviewtable_state')
         apo_files <- isolate(session_data$data$get_apo_files)
         mol_files <- isolate(session_data$data$get_mol_files)
-        try(uploadApoPDB(session=session, filepath=apo_files[1], repr='cartoon'), silent=F)
+        try(uploadApoPDB(session=session, filepath=apo_files[1], repr='cartoon', focus=TRUE), silent=F)
         try(sapply(mol_files, uploadUnfocussedMol, session=session), silent=F)
     })
 
