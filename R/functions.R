@@ -233,7 +233,7 @@ uploadPDB <- function(session, filepath, input){
 #' @param repr Representation for th structure (e.g. line or cartoon)
 #' 
 #' @return Returns Nothing
-uploadApoPDB <- function(session, filepath, repr){
+uploadApoPDB <- function(session, filepath, repr, focus){
     filepath <- removeSpaces(filepath)
     syscall <- sprintf('cat %s', filepath)
     pdbstrings <- system(syscall, intern = TRUE)
@@ -241,8 +241,9 @@ uploadApoPDB <- function(session, filepath, repr){
     session$sendCustomMessage(
         type = 'setapoPDB',
         message = list(
-            choice,
-            repr
+            choice, #0
+            repr, #1
+            tcl(focus) #2
         )
     )
 }
@@ -254,14 +255,14 @@ uploadApoPDB <- function(session, filepath, repr){
 #' @param ext The file extension
 #' 
 #' @return Returns Nothing
-uploadMolAndFocus <- function(session, filepath, ext){
+uploadMolAndFocus <- function(session, filepath, ext, focus){
     filepath <- removeSpaces(filepath)
     syscall <- sprintf('cat %s', filepath)
     pdbstrings <- system(syscall, intern = TRUE)
     choice <- paste0(pdbstrings, collapse = '\n')
     session$sendCustomMessage(
         type = 'addMolandfocus',
-        list(choice,ext)
+        list(choice,ext, tcl(focus))
     )
 }
 
@@ -568,4 +569,15 @@ createFragUploadFolder <- function(data, copymaps=FALSE){
     full_path_zipf <- sprintf('%s/%s', rootf, zipf)
 
     return(full_path_zipf)
+}
+
+#' Get residue list from pdb_file
+#' 
+#' @param pdb_file PDB file
+#' 
+#' @return Returns list of resiudes
+#' @importFrom bio3d read.pdb
+get_residues <- function(pdb_file){
+    struc <- bio3d::read.pdb(pdb_file)
+    c('', unique(paste(struc$atom$resid, struc$atom$resno, sep='_')))
 }

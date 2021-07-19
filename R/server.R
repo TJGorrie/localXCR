@@ -191,7 +191,8 @@ server <- function(input, output, session){
             })
         }
         f1 <- remapFragviewData(session_data = session_data)
-        output$fragviewtable <- updateMainTable(x=f1, pl=100, format=FALSE)
+        proxy2 %>% replaceData(f1(), rownames = FALSE, resetPaging = FALSE)
+        #output$fragviewtable <- updateMainTable(x=f1, pl=100, format=FALSE, input=input, stateref='fragviewtable_state')
     })
 
     r1 <- remapData(session_data = session_data)
@@ -200,14 +201,19 @@ server <- function(input, output, session){
     output$reviewtable <- updateMainTable(x=r1)
     output$fragviewtable <- updateMainTable(x=f1, pl=100, format=FALSE)
 
+    proxy1 <- dataTableProxy('reviewtable')
+    proxy2 <- dataTableProxy('fragviewtable')
+
     atomstoquery <- reactiveValues()
     atomstoquery$data <- data.frame(name=character(),
                  index=character(),
                  comment=character(),
                  stringsAsFactors=FALSE)
 
-    output$atoms <- DT::renderDataTable({DT::datatable(atomstoquery$data)})
-
+    output$atoms <- DT::renderDataTable({
+        DT::datatable(atomstoquery$data, options = list(autoWidth = TRUE, columnDefs = list(list(width='50px', targets=c(1,2)))))
+        }
+    )
     observeEvent(input$clickedAtoms, {
         newdat <- isolate(atomstoquery$data)
         # Check for 'new' rows:
@@ -218,7 +224,7 @@ server <- function(input, output, session){
         tokeep <- as.character(newdat$name) %in% as.character(input$clickNames)
         newdat <- newdat[tokeep,]
         atomstoquery$data <- newdat
-        output$atoms <- DT::renderDataTable({DT::datatable(atomstoquery$data, editable = list(target = 'cell', disable = list(columns = c(1,2))))})
+        output$atoms <- DT::renderDataTable({DT::datatable(atomstoquery$data, editable = list(target = 'cell', disable = list(columns = c(1,2))), options = list(autoWidth = TRUE, columnDefs = list(list(width='50px', targets=c(1,2)))))})
     })
 
     observeEvent(input$atoms_cell_edit, {
@@ -230,7 +236,23 @@ server <- function(input, output, session){
         update <- isolate(atomstoquery$data)
         update[i, j] <- as.character(v)
         atomstoquery$data <- update
-        output$atoms <- DT::renderDataTable({DT::datatable(atomstoquery$data, editable = list(target = 'cell', disable = list(columns = c(1,2))))})
+        output$atoms <- DT::renderDataTable({DT::datatable(atomstoquery$data, editable = list(target = 'cell', disable = list(columns = c(1,2))), options = list(autoWidth = TRUE, columnDefs = list(list(width='50px', targets=c(1,2)))))})
+    })
+
+    observeEvent(input$write_selected, {
+        idx <- isolate(input$atoms_rows_selected)
+        update <- isolate(atomstoquery$data)
+        update[idx, 3] <- as.character(input$atom_text)
+        atomstoquery$data <- update
+        output$atoms <- DT::renderDataTable({DT::datatable(atomstoquery$data, editable = list(target = 'cell', disable = list(columns = c(1,2))), options = list(autoWidth = TRUE, columnDefs = list(list(width='50px', targets=c(1,2)))))})
+    })
+
+    observeEvent(input$write_all,{
+        update <- isolate(atomstoquery$data)
+        idx <- 1:nrow(update)
+        update[idx, 3] <- as.character(input$atom_text)
+        atomstoquery$data <- update
+        output$atoms <- DT::renderDataTable({DT::datatable(atomstoquery$data, editable = list(target = 'cell', disable = list(columns = c(1,2))), options = list(autoWidth = TRUE, columnDefs = list(list(width='50px', targets=c(1,2)))))})
     })
 
     observeEvent(input$reviewtable_rows_selected, {
@@ -266,8 +288,8 @@ server <- function(input, output, session){
             if(!the_pdb_file == ''){
                 withProgress(message = sprintf('Loading %s Ligand', input$views), value = 0,{
                     incProgress(.2, detail = 'Uploading Crystal + Ligand')
-                    try(uploadApoPDB(session = session, filepath = the_pdb_file, repr = 'line'), silent = TRUE)
-                    try(uploadMolAndFocus(session = session, filepath = the_mol_file, ext = 'mol'), silent = TRUE)
+                    try(uploadApoPDB(session = session, filepath = the_pdb_file, repr = 'line', focus=input$autocenter), silent = TRUE)
+                    try(uploadMolAndFocus(session = session, filepath = the_mol_file, ext = 'mol', focus=input$autocenter), silent = TRUE)
                     names(the_emaps) <- basename(the_emaps)
                     session_data$current_emaps <- the_emaps
                     incProgress(.2, detail = 'Uploading Event map')
@@ -283,6 +305,14 @@ server <- function(input, output, session){
                     try(uploadVolumeDensity(session=session, filepath=the_fofc_map,
                         color = 'tomato', negateiso = TRUE, boxsize = input$boxsize, isolevel = input$isofofc, visable=input$fofcMap, windowname='fofcneg'), silent=F)
                     setProgress(1)
+                    residues <- get_residues(the_pdb_file)
+                    updateSelectInput(session, 'gotores', choices=residues)
+                    updateSelectizeInput(session, 'highlight_res', choices=residues, selected=input$highlight_res)
+                    if(!is.null(input$highlight_res)){
+                        if(!input$highlight_res == ''){
+                        pos <- paste(sapply(strsplit(input$highlight_res, '_'), '[', 2), collapse=', ')
+                        try(session$sendCustomMessage(type='highlight_residues', list(pos)))
+                    }}
                 })
             }
         } else {
@@ -290,6 +320,22 @@ server <- function(input, output, session){
             updateRadioButtons(session, 'views', selected = 'aligned')
         }
 
+    })
+
+    observeEvent(input$gotores, ignoreNULL=TRUE, {
+        if(!input$gotores == ''){
+            pos <- strsplit(input$gotores, '_')[[1]][2]
+            print(pos)
+            try(session$sendCustomMessage(type='go_to_residue', list(pos)))
+        }
+    })
+
+    observeEvent(input$highlight_res, ignoreNULL=TRUE,{
+        if(!input$highlight_res == ''){
+            pos <- paste(sapply(strsplit(input$highlight_res, '_'), '[', 2), collapse=', ')
+            print(pos)
+            try(session$sendCustomMessage(type='highlight_residues', list(pos)))
+        }
     })
 
     observeEvent(input$emap, ignoreNULL = TRUE, {
@@ -330,11 +376,12 @@ server <- function(input, output, session){
                         the_fofc_map <- ''
                     },
                     'aligned' = {
-                        # Default Behaviour do not change anything!
-                        try(uploadApoPDB(session = session, filepath = the_pdb_file, repr = 'line'), silent = TRUE)
-                        try(uploadMolAndFocus(session = session, filepath = the_mol_file, ext = 'mol'), silent = TRUE)
+                        try(uploadApoPDB(session = session, filepath = the_pdb_file, repr = 'line', focus=input$autocenter), silent = TRUE)
+                        try(uploadMolAndFocus(session = session, filepath = the_mol_file, ext = 'mol', focus=input$autocenter), silent = TRUE)
+                        session$sendCustomMessage(type = 'restore_camera_pos', message = list())
                     },
                     'crystallographic' = {
+                        session$sendCustomMessage(type = 'save_camera_pos', message = list())
                         the_pdb_file <- selected_ligand$crys_pdb_file
                         try(uploadPDB(session = session, filepath = the_pdb_file, input = input), silent=T)
                         the_2fofc_map <- selected_ligand$crys_2fofc_map
@@ -342,6 +389,11 @@ server <- function(input, output, session){
                         the_emaps <- selected_ligand$crys_event_maps
                     }
                 )
+                if(!is.null(input$highlight_res)){
+                    if(!input$highlight_res == ''){
+                    pos <- paste(sapply(strsplit(input$highlight_res, '_'), '[', 2), collapse=', ')
+                    try(session$sendCustomMessage(type='highlight_residues', list(pos)))
+                }}
                 if(length(the_emaps) > 0) {
                     names(the_emaps) <- basename(the_emaps)
                     session_data$current_emaps <- the_emaps
@@ -391,7 +443,7 @@ server <- function(input, output, session){
             apo_files <- isolate(session_data$data$get_apo_files)
             mol_files <- isolate(session_data$data$get_mol_files)
             updateSelectInput(session, 'goto', choices = ligands)
-            tryAddPDB <- try(uploadApoPDB(filepath=apo_files[1], repr='cartoon'), silent=T)
+            tryAddPDB <- try(uploadApoPDB(filepath=apo_files[1], repr='cartoon',focus=TRUE), silent=T)
             molout <- try(sapply(mol_files, uploadUnfocussedMol), silent=T)
         }
     })
@@ -410,7 +462,8 @@ server <- function(input, output, session){
     # 2) Save the coordinates of default view and call to them directly :D?
     # 3) Cry
     observeEvent(input$fitButton, {
-        try(uploadMolAndFocus(session = session, filepath = isolate(session_data$selected)$mol_file, ext = 'mol'), silent = TRUE)
+        #try(uploadMolAndFocus(session = session, filepath = isolate(session_data$selected)$mol_file, ext = 'mol', focus=TRUE), silent = TRUE)
+        try(session$sendCustomMessage(type='focus_on_mol', list()), silent=TRUE)
     })
 
     observeEvent(input$decision, {
@@ -446,17 +499,19 @@ server <- function(input, output, session){
                 saveReview(x = fData, z = atomstoquery$data, ligand = isolate(session_data$selected))
                 resetForm(session = session, session_data = session_data)
                 r1 <- remapData(session_data = session_data)
-                output$reviewtable <- updateMainTable(x=r1)
+                proxy1 %>% replaceData(r1(), rownames = FALSE, resetPaging = FALSE)
+                #output$reviewtable <- updateMainTable(x=r1, input=input, stateref='reviewtable_state')
             }
         }
     })
 
     observeEvent(input$updateTable, ignoreNULL=FALSE, {
         f1 <- remapFragviewData(session_data = session_data)
-        output$fragviewtable <- updateMainTable(x=f1, pl=100, format=FALSE)
+        proxy2 %>% replaceData(f1(), rownames = FALSE, resetPaging = FALSE)
+        #output$fragviewtable <- updateMainTable(x=f1, pl=100, format=FALSE, input=input, stateref='fragviewtable_state')
         apo_files <- isolate(session_data$data$get_apo_files)
         mol_files <- isolate(session_data$data$get_mol_files)
-        try(uploadApoPDB(session=session, filepath=apo_files[1], repr='cartoon'), silent=F)
+        try(uploadApoPDB(session=session, filepath=apo_files[1], repr='cartoon', focus=TRUE), silent=F)
         try(sapply(mol_files, uploadUnfocussedMol, session=session), silent=F)
     })
 
@@ -469,7 +524,8 @@ server <- function(input, output, session){
         output$metastatus <- renderText({'STATUS: Written!'})
         if(!input$desync){
             f1 <- remapFragviewData(session_data = session_data)
-            output$fragviewtable <- updateMainTable(x=f1, pl=100, format=FALSE)
+            proxy2 %>% replaceData(f1(), rownames = FALSE, resetPaging = FALSE)
+            #output$fragviewtable <- updateMainTable(x=f1, pl=100, format=FALSE, input=input, stateref='fragviewtable_state')
         }
     })
 

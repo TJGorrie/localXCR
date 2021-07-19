@@ -12,9 +12,12 @@ review_ui <- function(session_data){
             tabBox(
                 tabPanel(
                     title = 'NGL Controls',
-                    actionButton(
+                    fluidRow(
+                    column(6, actionButton(
                         "fitButton", 
                         "Center on Ligand"
+                    )),
+                    column(6,checkboxInput('autocenter', 'Automatically Center on load', value=TRUE))
                     ),
                     fluidRow(
                         shinyWidgets::chooseSliderSkin(
@@ -111,13 +114,34 @@ review_ui <- function(session_data){
                                 multiple = FALSE
                             )
                         )
+                    ),
+                    fluidRow(
+                        selectInput(
+                            'gotores',
+                            'Go to Residue:',
+                            choices = '',
+                            multiple = FALSE
+                        ),
+                        selectizeInput(
+                            'highlight_res',
+                            'Highlight Residues:',
+                            choices = '',
+                            multiple = TRUE
+                        )
                     )
                 ),
                 tabPanel(
                     title = 'Atom Selection (Alt + Left Click)',
                     textOutput('as_message'),
-                    actionButton('as_clear', 
-                        label = 'Clear all selected atoms'),
+                    fluidRow(
+                        column(3, actionButton('as_clear', label = 'Clear Atoms')),
+                        column(3, fluidRow(
+                            actionButton('write_all', 'Write to All Atoms?', value=FALSE), 
+                            actionButton('write_selected', label = 'Write to selected rows')
+                            )
+                        ),
+                        column(3, selectizeInput('atom_text', 'Comment', choices=c('', 'Weak Density', 'No Density Evidence', 'Unexpected Atom', 'Multiple Conformations', options=list(create=TRUE))))
+                    ),
                     DT::dataTableOutput('atoms')
                 )
             ), options = list(delay = '1000')
