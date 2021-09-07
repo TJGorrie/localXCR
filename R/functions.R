@@ -321,7 +321,8 @@ uploadVolumeDensity <- function(
     boxsize, 
     isolevel, 
     visable, 
-    windowname
+    windowname,
+    isotype = 'value'
     ){
     volume_bin <- readBin(filepath, what='raw', file.info(filepath)$size)
     volume_b64 <- caTools::base64encode(
@@ -339,7 +340,8 @@ uploadVolumeDensity <- function(
             as.character(getExt(filepath)), #4
             as.character(boxsize), #5
             tcl(visable), #6
-            as.character(windowname) #7
+            as.character(windowname), #7,
+            as.character(isotype) # 8
         )
     )
 }
