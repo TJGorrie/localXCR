@@ -345,6 +345,7 @@ server <- function(input, output, session){
     })
 
     observeEvent(input$views, {
+        isoleveltype = 'value'
         selected_ligand <- isolate(session_data$selected)
         if(is.null(input$views)) updateRadioButtons(session, 'views', selected = 'aligned')
         session$sendCustomMessage(type = 'setup', message = list())
@@ -387,6 +388,7 @@ server <- function(input, output, session){
                         the_2fofc_map <- selected_ligand$crys_2fofc_map
                         the_fofc_map <- selected_ligand$crys_fofc_map
                         the_emaps <- selected_ligand$crys_event_maps
+                        isoleveltype = 'sigma'
                     }
                 )
                 if(!is.null(input$highlight_res)){
@@ -403,13 +405,13 @@ server <- function(input, output, session){
                 # Move this to a different part?
                 incProgress(.2, detail = 'Uploading 2fofc map')
                 try(uploadVolumeDensity(session=session, filepath=the_2fofc_map,
-                    color = 'blue', negateiso = FALSE, boxsize = input$boxsize, isolevel = input$iso2fofc, visable=input$twofofcMap, windowname='twofofc'), silent=T)
+                    color = 'blue', negateiso = FALSE, boxsize = input$boxsize, isolevel = input$iso2fofc, visable=input$twofofcMap, windowname='twofofc', isotype=isoleveltype), silent=T)
                 incProgress(.1, detail = 'Uploading fofc map')
                 try(uploadVolumeDensity(session=session, filepath=the_fofc_map,
-                    color = 'lightgreen', negateiso = FALSE, boxsize = input$boxsize, isolevel = input$isofofc, visable=input$fofcMap, windowname='fofcpos'), silent=T)
+                    color = 'lightgreen', negateiso = FALSE, boxsize = input$boxsize, isolevel = input$isofofc, visable=input$fofcMap, windowname='fofcpos', isotype=isoleveltype), silent=T)
                 incProgress(.1, detail = 'Uploading fofc map')
                 try(uploadVolumeDensity(session=session, filepath=the_fofc_map,
-                    color = 'tomato', negateiso = TRUE, boxsize = input$boxsize, isolevel = input$isofofc, visable=input$fofcMap, windowname='fofcneg'), silent=T)
+                    color = 'tomato', negateiso = TRUE, boxsize = input$boxsize, isolevel = input$isofofc, visable=input$fofcMap, windowname='fofcneg', isotype=isoleveltype), silent=T)
             }
             setProgress(1)
         })
