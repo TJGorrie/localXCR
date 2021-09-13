@@ -171,6 +171,15 @@ server <- function(input, output, session){
         filetypes = c('', '.pdb', '.mol', '.ccp4', '.map', '.txt')
     )
 
+    r1 <- remapData(session_data = session_data)
+    f1 <- remapFragviewData(session_data = session_data)
+
+    output$reviewtable <- updateMainTable(x=r1)
+    output$fragviewtable <- updateMainTable(x=f1, pl=100, format=FALSE)
+
+    proxy1 <- dataTableProxy('reviewtable')
+    proxy2 <- dataTableProxy('fragviewtable')
+
     observeEvent(input$summary_import_dir, {
         print(isolate(input$summary_import_dir))
         path <- normalise_path(x = isolate(input$summary_import_dir), root = roots)
@@ -192,17 +201,7 @@ server <- function(input, output, session){
         }
         f1 <- remapFragviewData(session_data = session_data)
         proxy2 %>% replaceData(f1(), rownames = FALSE, resetPaging = FALSE)
-        #output$fragviewtable <- updateMainTable(x=f1, pl=100, format=FALSE, input=input, stateref='fragviewtable_state')
     })
-
-    r1 <- remapData(session_data = session_data)
-    f1 <- remapFragviewData(session_data = session_data)
-
-    output$reviewtable <- updateMainTable(x=r1)
-    output$fragviewtable <- updateMainTable(x=f1, pl=100, format=FALSE)
-
-    proxy1 <- dataTableProxy('reviewtable')
-    proxy2 <- dataTableProxy('fragviewtable')
 
     atomstoquery <- reactiveValues()
     atomstoquery$data <- data.frame(name=character(),
@@ -438,6 +437,11 @@ server <- function(input, output, session){
             )
         }
         if(input$tab == 'fragview'){
+            f1 <- remapFragviewData(session_data = session_data)
+            output$fragviewtable <- updateMainTable(x=f1, pl=100, format=FALSE)
+            proxy2 <- dataTableProxy('fragviewtable')
+            f1 <- remapFragviewData(session_data = session_data)
+            proxy2 %>% replaceData(f1(), rownames = FALSE, resetPaging = FALSE)
             updateActionButton(session, 'updateTable')
             ligands <- isolate(session_data$data$get_ligands)
             apo_files <- isolate(session_data$data$get_apo_files)
@@ -447,6 +451,7 @@ server <- function(input, output, session){
             molout <- try(sapply(mol_files, uploadUnfocussedMol), silent=T)
         }
     })
+
 
     observeEvent(input$as_clear, {
         session$sendCustomMessage(type = 'as_resetclicked', list())
@@ -500,7 +505,6 @@ server <- function(input, output, session){
                 resetForm(session = session, session_data = session_data)
                 r1 <- remapData(session_data = session_data)
                 proxy1 %>% replaceData(r1(), rownames = FALSE, resetPaging = FALSE)
-                #output$reviewtable <- updateMainTable(x=r1, input=input, stateref='reviewtable_state')
             }
         }
     })
@@ -508,7 +512,6 @@ server <- function(input, output, session){
     observeEvent(input$updateTable, ignoreNULL=FALSE, {
         f1 <- remapFragviewData(session_data = session_data)
         proxy2 %>% replaceData(f1(), rownames = FALSE, resetPaging = FALSE)
-        #output$fragviewtable <- updateMainTable(x=f1, pl=100, format=FALSE, input=input, stateref='fragviewtable_state')
         apo_files <- isolate(session_data$data$get_apo_files)
         mol_files <- isolate(session_data$data$get_mol_files)
         try(uploadApoPDB(session=session, filepath=apo_files[1], repr='cartoon', focus=TRUE), silent=F)
@@ -525,17 +528,15 @@ server <- function(input, output, session){
         if(!input$desync){
             f1 <- remapFragviewData(session_data = session_data)
             proxy2 %>% replaceData(f1(), rownames = FALSE, resetPaging = FALSE)
-            #output$fragviewtable <- updateMainTable(x=f1, pl=100, format=FALSE, input=input, stateref='fragviewtable_state')
         }
     })
-
-
     observeEvent(input$gonext, {
         ligands <- isolate(session_data$data$get_ligands)
         apo_files <- isolate(session_data$data$get_apo_files)
         mol_files <- isolate(session_data$data$get_mol_files)
         nmol <- length(mol_files)
-        id <- which(ligands == input$goto)
+        if(is.null(input$goto)) id <- 0
+        else id <- which(ligands == input$goto)
         next_id <- id + 1
         if(next_id > nmol) next_id <- 1 # Overflow back to start of list
         # Cycle along to next ligand in molfil
@@ -547,9 +548,10 @@ server <- function(input, output, session){
         apo_files <- isolate(session_data$data$get_apo_files)
         mol_files <- isolate(session_data$data$get_mol_files)
         nmol <- length(mol_files)
-        id <- which(ligands == input$goto)
+        if(is.null(input$goto)) id <- 0
+        else id <- which(ligands == input$goto)
         next_id <- id - 1
-        if(next_id < nmol) next_id <- 1 # Overflow back to start of list
+        if(next_id < 1) next_id <- nmol # Overflow back to start of list
         # Cycle along to next ligand in molfil
         updateSelectInput(session, 'goto', selected = ligands[next_id], choices=ligands)
     })
@@ -583,7 +585,8 @@ server <- function(input, output, session){
     observeEvent(input$lp_launcher, {
         session_data$fullpath_frag <- createFragUploadFolder(
             data = session_data$data,
-            copymaps = input$copymaps
+            copymaps = input$copymaps,
+            usereviews = input$usereviews
         )
     })
 

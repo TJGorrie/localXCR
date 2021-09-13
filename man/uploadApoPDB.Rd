@@ -4,7 +4,7 @@
 \alias{uploadApoPDB}
 \title{Upload an apo PDB to NGL Stage}
 \usage{
-uploadApoPDB(session, filepath, repr)
+uploadApoPDB(session, filepath, repr, focus)
 }
 \arguments{
 \item{session}{A shiny server session object}

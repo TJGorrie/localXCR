@@ -23,7 +23,12 @@ ui <- function(){
         sidebarMenu(
             id = 'tab',
             menuItem(
-                'Import/Summary', 
+                'Annotate', 
+                tabName = 'fragview', 
+                icon = icon('dashboard')
+            ),
+            menuItem(
+                'Summary', 
                 tabName = 'summary', 
                 icon = icon('th')
             ),
@@ -32,11 +37,7 @@ ui <- function(){
                 tabName = 'review', 
                 icon = icon('dashboard')
             ),
-            menuItem(
-                'Annotate', 
-                tabName = 'fragview', 
-                icon = icon('dashboard')
-            ),
+
             menuItem(
                 'Export', 
                 tabName = 'launchpad', 

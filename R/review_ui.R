@@ -144,7 +144,7 @@ review_ui <- function(session_data){
                     ),
                     DT::dataTableOutput('atoms')
                 )
-            ), options = list(delay = '1000')
+            ), options = list(delay = '1000', cancel = '.selectize-control')
         ),
         jqui_draggable(
             tabBox(

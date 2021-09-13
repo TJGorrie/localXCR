@@ -4,7 +4,7 @@
 \alias{uploadMolAndFocus}
 \title{Upload a mol file to NGL Stage (and focus!)}
 \usage{
-uploadMolAndFocus(session, filepath, ext)
+uploadMolAndFocus(session, filepath, ext, focus)
 }
 \arguments{
 \item{session}{A shiny server session object}

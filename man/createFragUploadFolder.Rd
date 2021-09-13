@@ -4,7 +4,7 @@
 \alias{createFragUploadFolder}
 \title{Create the folder one would need to upload to fragalysis}
 \usage{
-createFragUploadFolder(data, copymaps = FALSE)
+createFragUploadFolder(data, copymaps = FALSE, usereviews = TRUE)
 }
 \arguments{
 \item{data}{an experiment object}

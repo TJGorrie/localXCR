@@ -507,7 +507,7 @@ uploadMolAndFocus2 <- function(session, filepath){
 #' @param copymaps bool, if you want to copy the maps
 #' 
 #' @return Creates some folders on the file system and return the filepath of the zipped file!
-createFragUploadFolder <- function(data, copymaps=FALSE){
+createFragUploadFolder <- function(data, copymaps=FALSE, usereviews=TRUE){
     progress <- shiny::Progress$new()
     on.exit(progress$close())
     progress$set(message = "Creating Folder", value = 0)
@@ -532,7 +532,12 @@ createFragUploadFolder <- function(data, copymaps=FALSE){
 
     # Filter out IGNORES and non Releases?
     keep_one <- !meta$site_name == 'IGNORE'
-    keep_two <- data$get_status == 'Release'
+    keep_one[is.na(keep_one)] <- FALSE
+    if(usereviews){
+        keep_two <- data$get_status == 'Release'
+    } else {
+        keep_two <- rep(T, length(data$get_status))
+    }
     meta <- meta[keep_one & keep_two, ]
     # aligned data copy
     progress$set(message = "Copying aligned Files", value = 0)
@@ -547,7 +552,6 @@ createFragUploadFolder <- function(data, copymaps=FALSE){
         if(!copymaps) files <- files[!grepl("(.map$|.ccp4$)", files)]
         system(sprintf('mkdir %s', nf))
         file.copy(file.path(cf,files), file.path(nf, files))
-
         # Then do the crystallographic?
         cf <- obj$crys_loc
         nf <- crys_dir

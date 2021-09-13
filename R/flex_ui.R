@@ -61,6 +61,12 @@ flex_ui <- function(which, session_data){
              )
         ),
         fragview = tagList(
+            shinyFiles::shinyDirButton(
+                id = 'summary_import_dir',
+                label = 'Select a folder',
+                title = 'Please select an input folder'
+            ),
+            textOutput('summary_import_dir_filepath'),
             actionButton(
                 'updateTable', 
                 'Refresh Metadata Table'
