@@ -322,7 +322,7 @@ uploadVolumeDensity <- function(
     isolevel, 
     visable, 
     windowname,
-    isotype
+    isotype = 'value'
     ){
     print(filepath)
     volume_bin <- readBin(filepath, what='raw', file.info(filepath)$size)
