@@ -57,17 +57,17 @@ Ligand <- R6::R6Class(
         },
         #' @field twofofc_file file path where _2fofc.map should exist
         twofofc_file    = function(value){ 
-            if(missing(value)) file.path(
-                self$aligned_loc, 
-                sprintf('%s_2fofc.map', self$name)
-            )
+            if(missing(value)) {
+                files = dir(file.path(self$aligned_loc, self$name), full=T)
+                files[grep('_2fofc', files)][1]
+            }
         },
         #' @field fofc_file file path where _fofc.map should exist
         fofc_file       = function(value){ 
-            if(missing(value)) file.path(
-                self$aligned_loc, 
-                sprintf('%s_fofc.map', self$name)
-            )
+            if(missing(value)) {
+                files = dir(file.path(self$aligned_loc, self$name), full=T)
+                files[grep('_fofc', files)][1]
+            }
         },
         #' @field smiles_file file path where _smiles.txt should exist
         smiles_file     = function(value){ 
@@ -82,14 +82,14 @@ Ligand <- R6::R6Class(
         },
         #' @field event_map_paths file paths where event maps should reside
         event_map_paths = function(value){ 
-            if(missing(value)) file.path(
-                self$aligned_loc, 
-                dir(self$aligned_loc, pattern = 'event_')
-            )
+            if(missing(value)) {
+                files = dir(file.path(self$aligned_loc, self$name), full=T)
+                files[grep('_event', files)]
+            }
         },
         #' @field first_event_map returns the first eventmap
         first_event_map = function(value){ 
-            if(missing(value)) self$event_maps[1]
+            if(missing(value)) self$event_map_paths[1]
         }, # Just take the first event map 
         #' @field metadata the contents of the metadata
         metadata        = function(value){
