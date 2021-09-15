@@ -323,6 +323,7 @@ uploadVolumeDensity <- function(
     visable, 
     windowname
     ){
+    print(filepath)
     volume_bin <- readBin(filepath, what='raw', file.info(filepath)$size)
     volume_b64 <- caTools::base64encode(
         volume_bin, 

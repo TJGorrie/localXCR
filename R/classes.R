@@ -157,7 +157,6 @@ Ligand <- R6::R6Class(
             if(missing(value)){
                 files = dir(self$crys_loc, pattern=self$crystal, full=T)
                 files[grep('_2fofc', files)]
-                #file.path(self$crys_loc, paste0(self$crystal,'_2fofc.map'))
             }
         },
         #' @field crys_fofc_map filepath of fofc map
