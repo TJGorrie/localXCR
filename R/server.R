@@ -261,6 +261,7 @@ server <- function(input, output, session){
     })
 
     observeEvent(input$ligand, ignoreNULL=TRUE, {
+        isotype='value'
         if(!input$ligand == '') session_data$selected <- session_data$data$ligands[[input$ligand]]
         atomstoquery$data <- data.frame(name=character(),
                  index=character(),
@@ -296,13 +297,13 @@ server <- function(input, output, session){
                     # Move this to a different part?
                     incProgress(.2, detail = 'Uploading 2fofc map')
                     try(uploadVolumeDensity(session=session, filepath=the_2fofc_map,
-                        color = 'blue', negateiso = FALSE, boxsize = input$boxsize, isolevel = input$iso2fofc, visable=input$twofofcMap, windowname='twofofc'), silent=F)
+                        color = 'blue', negateiso = FALSE, boxsize = input$boxsize, isolevel = input$iso2fofc, visable=input$twofofcMap, windowname='twofofc', isotype=isotype), silent=F)
                     incProgress(.1, detail = 'Uploading fofc map')
                     try(uploadVolumeDensity(session=session, filepath=the_fofc_map,
-                        color = 'lightgreen', negateiso = FALSE, boxsize = input$boxsize, isolevel = input$isofofc, visable=input$fofcMap, windowname='fofcpos'), silent=F)
+                        color = 'lightgreen', negateiso = FALSE, boxsize = input$boxsize, isolevel = input$isofofc, visable=input$fofcMap, windowname='fofcpos', isotype=isotype), silent=F)
                     incProgress(.1, detail = 'Uploading fofc map')
                     try(uploadVolumeDensity(session=session, filepath=the_fofc_map,
-                        color = 'tomato', negateiso = TRUE, boxsize = input$boxsize, isolevel = input$isofofc, visable=input$fofcMap, windowname='fofcneg'), silent=F)
+                        color = 'tomato', negateiso = TRUE, boxsize = input$boxsize, isolevel = input$isofofc, visable=input$fofcMap, windowname='fofcneg', isotype=isotype), silent=F)
                     setProgress(1)
                     residues <- get_residues(the_pdb_file)
                     updateSelectInput(session, 'gotores', choices=residues)
@@ -340,10 +341,11 @@ server <- function(input, output, session){
     observeEvent(input$emap, ignoreNULL = TRUE, {
         sel <- isolate(session_data$current_emaps)[input$emap]
         try(uploadVolumeDensity(session=session, filepath=sel,
-            color = 'orange', negateiso = FALSE, boxsize = input$boxsize, isolevel = input$isoEvent, visable=input$eventMap, windowname='eventmap'), silent=F)
+            color = 'orange', negateiso = FALSE, boxsize = input$boxsize, isolevel = input$isoEvent, visable=input$eventMap, windowname='eventmap', isotype=isotype), silent=F)
     })
 
     observeEvent(input$views, {
+        isotype='value'
         selected_ligand <- isolate(session_data$selected)
         if(is.null(input$views)) updateRadioButtons(session, 'views', selected = 'aligned')
         session$sendCustomMessage(type = 'setup', message = list())
@@ -386,6 +388,7 @@ server <- function(input, output, session){
                         the_2fofc_map <- selected_ligand$crys_2fofc_map
                         the_fofc_map <- selected_ligand$crys_fofc_map
                         the_emaps <- selected_ligand$crys_event_maps
+                        isotype = 'sigma'
                     }
                 )
                 if(!is.null(input$highlight_res)){
@@ -402,13 +405,13 @@ server <- function(input, output, session){
                 # Move this to a different part?
                 incProgress(.2, detail = 'Uploading 2fofc map')
                 try(uploadVolumeDensity(session=session, filepath=the_2fofc_map,
-                    color = 'blue', negateiso = FALSE, boxsize = input$boxsize, isolevel = input$iso2fofc, visable=input$twofofcMap, windowname='twofofc'), silent=T)
+                    color = 'blue', negateiso = FALSE, boxsize = input$boxsize, isolevel = input$iso2fofc, visable=input$twofofcMap, windowname='twofofc', isotype=isotype), silent=T)
                 incProgress(.1, detail = 'Uploading fofc map')
                 try(uploadVolumeDensity(session=session, filepath=the_fofc_map,
-                    color = 'lightgreen', negateiso = FALSE, boxsize = input$boxsize, isolevel = input$isofofc, visable=input$fofcMap, windowname='fofcpos'), silent=T)
+                    color = 'lightgreen', negateiso = FALSE, boxsize = input$boxsize, isolevel = input$isofofc, visable=input$fofcMap, windowname='fofcpos', isotype=isotype), silent=T)
                 incProgress(.1, detail = 'Uploading fofc map')
                 try(uploadVolumeDensity(session=session, filepath=the_fofc_map,
-                    color = 'tomato', negateiso = TRUE, boxsize = input$boxsize, isolevel = input$isofofc, visable=input$fofcMap, windowname='fofcneg'), silent=T)
+                    color = 'tomato', negateiso = TRUE, boxsize = input$boxsize, isolevel = input$isofofc, visable=input$fofcMap, windowname='fofcneg', isotype=isotype), silent=T)
             }
             setProgress(1)
         })
