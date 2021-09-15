@@ -58,14 +58,14 @@ Ligand <- R6::R6Class(
         #' @field twofofc_file file path where _2fofc.map should exist
         twofofc_file    = function(value){ 
             if(missing(value)) {
-                files = dir(file.path(self$aligned_loc, self$name), full=T)
+                files = dir(self$aligned_loc, full=T)
                 files[grep('_2fofc', files)][1]
             }
         },
         #' @field fofc_file file path where _fofc.map should exist
         fofc_file       = function(value){ 
             if(missing(value)) {
-                files = dir(file.path(self$aligned_loc, self$name), full=T)
+                files = dir(self$aligned_loc, full=T)
                 files[grep('_fofc', files)][1]
             }
         },
@@ -83,7 +83,7 @@ Ligand <- R6::R6Class(
         #' @field event_map_paths file paths where event maps should reside
         event_map_paths = function(value){ 
             if(missing(value)) {
-                files = dir(file.path(self$aligned_loc, self$name), full=T)
+                files = dir(self$aligned_loc, full=T)
                 files[grep('_event', files)]
             }
         },
