@@ -27,19 +27,18 @@ ui <- function(){
                 tabName = 'fragview', 
                 icon = icon('dashboard')
             ),
-            menuItem(
-                'Summary', 
-                tabName = 'summary', 
-                icon = icon('th')
-            ),
+            #menuItem(
+            #    'Summary', 
+            #    tabName = 'summary', 
+            #    icon = icon('th')
+            #),
             menuItem(
                 'Review', 
                 tabName = 'review', 
                 icon = icon('dashboard')
             ),
-
             menuItem(
-                'Export', 
+                'Summary/Export', 
                 tabName = 'launchpad', 
                 icon = icon('th')
             ),
