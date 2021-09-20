@@ -343,7 +343,6 @@ uploadVolumeDensity <- function(
             tcl(visable), #6
             as.character(windowname), #7
             as.character(isotype)#8
-        )
     )
 }
 
